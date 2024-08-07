@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String @map("user_id") @id @db.VarChar(26)
+  name          String @map("name") @db.VarChar(255)
+  registrations Registration[]
+  
+  @@map("users")
+}
+
+model Lecture {
+  id              String   @map("lecture_id") @id @db.VarChar(26)
+  title           String   @map("title") @db.VarChar(255)
+  description     String   @map("name") @db.VarChar(255)
+  maxCapacity     Int      @map("max_capacity") @db.Int
+  currentCapacity Int      @map("current_capacity") @db.Int
+  date            DateTime @map("date") @db.DateTime
+  registrations   Registration[]
+  
+  @@map("lectures")
+}
+
+model Registration {
+  id           String   @map("registration_id") @id @db.VarChar(26)
+  userId       String   @map("user_id") @db.VarChar(26)
+  lectureId    String   @map("lecture_id") @db.VarChar(26)
+  registerDate DateTime @map("registerDate") @db.DateTime
+  user         User     @relation(fields: [userId], references: [id])
+  lecture      Lecture  @relation(fields: [lectureId], references: [id])
+
+  @@map("registrations")
+}
