@@ -14,22 +14,24 @@ CREATE TABLE `lectures` (
     `max_capacity` INTEGER NOT NULL,
     `current_capacity` INTEGER NOT NULL,
     `date` DATETIME NOT NULL,
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`lecture_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `registrations` (
-    `registration_id` VARCHAR(26) NOT NULL,
+CREATE TABLE `lecture_applications` (
+    `lecture_application_id` VARCHAR(26) NOT NULL,
     `user_id` VARCHAR(26) NOT NULL,
     `lecture_id` VARCHAR(26) NOT NULL,
-    `registerDate` DATETIME NOT NULL,
+    `application_date` DATETIME NOT NULL,
 
-    PRIMARY KEY (`registration_id`)
+    UNIQUE INDEX `lecture_applications_user_id_key`(`user_id`),
+    PRIMARY KEY (`lecture_application_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `registrations` ADD CONSTRAINT `registrations_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `lecture_applications` ADD CONSTRAINT `lecture_applications_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `registrations` ADD CONSTRAINT `registrations_lecture_id_fkey` FOREIGN KEY (`lecture_id`) REFERENCES `lectures`(`lecture_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `lecture_applications` ADD CONSTRAINT `lecture_applications_lecture_id_fkey` FOREIGN KEY (`lecture_id`) REFERENCES `lectures`(`lecture_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
