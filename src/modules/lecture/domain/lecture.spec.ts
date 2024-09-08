@@ -11,6 +11,7 @@ describe('Lecture', () => {
         maxCapacity: 2,
         currentCapacity: 2,
         date: new Date(),
+        updatedAt: new Date(),
       });
 
       // When & Then
@@ -28,6 +29,7 @@ describe('Lecture', () => {
         maxCapacity: 2,
         currentCapacity: 0,
         date: new Date(),
+        updatedAt: new Date(),
       });
 
       // When

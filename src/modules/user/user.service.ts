@@ -11,7 +11,7 @@ export class UserService {
   ) {}
 
   async find(userId: string): Promise<User> {
-    const user = await this.userReposigtory.findOne(userId);
+    const user = await this.userReposigtory.findById(userId);
 
     if (!user) {
       throw new Error('User not found');

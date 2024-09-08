@@ -4,6 +4,7 @@ import { PRISMA_CLIENT } from '../../../core/database/prisma.di-tokens';
 import { PrismaService } from '../../../core/database/prisma.service';
 import Lecture from '../domain/lecture';
 import { LectureMapper } from '../lecture.mapper';
+import { BaseRepository } from 'src/repository/base-respository';
 
 export type LectureModel = Prisma.LectureGetPayload<typeof validation>;
 export type LectureRawQueryModel = {
@@ -29,10 +30,12 @@ const validation = Prisma.validator<Prisma.LectureDefaultArgs>()({
 });
 
 @Injectable()
-export class LectureRepository {
+export class LectureRepository extends BaseRepository{
   constructor(
-    @Inject(PRISMA_CLIENT) private readonly prismaService: PrismaService,
-  ) {}
+    @Inject(PRISMA_CLIENT) readonly prismaService: PrismaService,
+  ) {
+    super(prismaService);
+  }
 
   async create(data: Lecture): Promise<Lecture> {
     const lecture = await this.prismaService.lecture.create({
@@ -50,7 +53,7 @@ export class LectureRepository {
     return lectures.map(LectureMapper.toDomain);
   }
 
-  async findOne(id: string): Promise<Lecture | null> {
+  async findById(id: string): Promise<Lecture | null> {
     const lecture = await this.prismaService.lecture.findUnique({
       where: { id },
       ...validation,
@@ -59,14 +62,18 @@ export class LectureRepository {
     return lecture ? LectureMapper.toDomain(lecture) : null;
   }
 
-  async findOneForUpdate(
-    lectureId: string,
-    tx?: Prisma.TransactionClient,
-  ): Promise<Lecture | null> {
-    const [lectures] = await (tx || this.prismaService).$queryRaw<
-      LectureRawQueryModel[]
-    >`SELECT * FROM \`lectures\` WHERE lecture_id = ${lectureId} FOR UPDATE`;
+  async findByIdWithPessimisticLock(id: string, tx: Prisma.TransactionClient): Promise<Lecture | null> {
+    const lectures = await tx.$queryRaw<LectureRawQueryModel[]>`
+      SELECT * FROM lecture WHERE lecture_id = ${id} FOR UPDATE;
+    `;
 
-    return lectures ? LectureMapper.rawQueryToDomain(lectures) : null;
+    return lectures.length ? LectureMapper.rawQueryToDomain(lectures[0]) : null;
+  }
+
+  async updateWithPessimisticLock(lecture: Lecture, tx: Prisma.TransactionClient): Promise<void> {
+    await tx.lecture.update({
+      where: { id: lecture.id },
+      data: LectureMapper.toPersistence(lecture),
+    });
   }
 }

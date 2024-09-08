@@ -6,10 +6,8 @@ import {
   LECTURE_REPOSITORY,
 } from './lecture.di-tokens';
 import { LectureRepository } from './database/lecture.repository';
-import { LectureMapper } from './lecture.mapper';
 import { UserModule } from '../user/user.module';
 import { LectureApplicationRepository } from './database/lecture-application.repository';
-import { LectureApplicationMapper } from './lecture-application.mapper';
 
 @Module({
   imports: [UserModule],
@@ -21,8 +19,6 @@ import { LectureApplicationMapper } from './lecture-application.mapper';
       provide: LECTURE_APPLICATION_REPOSITORY,
       useClass: LectureApplicationRepository,
     },
-    LectureMapper,
-    LectureApplicationMapper,
   ],
 })
 export class LectrueModule {}

@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
 import { LectureApplicationModel } from './database/lecture-application.repository';
 import LectureApplication from './domain/lecture-application';
-@Injectable()
+
 export class LectureApplicationMapper {
   static toPersistence(
     lectureApplication: LectureApplication,

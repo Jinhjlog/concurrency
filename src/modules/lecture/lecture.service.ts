@@ -1,8 +1,6 @@
 import {
-  ConflictException,
   Inject,
   Injectable,
-  NotFoundException,
 } from '@nestjs/common';
 import {
   LECTURE_APPLICATION_REPOSITORY,
@@ -12,10 +10,8 @@ import { LectureRepository } from './database/lecture.repository';
 import { USER_REPOSITORY } from '../user/user.di-tokens';
 import { UserRepository } from '../user/database/user.repository';
 import Lecture from './domain/lecture';
-import LectureApplication from './domain/lecture-application';
 import { LectureApplicationRepository } from './database/lecture-application.repository';
-import { PRISMA_CLIENT } from '../../core/database/prisma.di-tokens';
-import { PrismaService } from '../../core/database/prisma.service';
+import LectureApplication from './domain/lecture-application';
 
 type ApplyType = {
   userId: string;
@@ -25,7 +21,6 @@ type ApplyType = {
 @Injectable()
 export class LectureService {
   constructor(
-    @Inject(PRISMA_CLIENT) private readonly prismaService: PrismaService,
     @Inject(LECTURE_REPOSITORY)
     private readonly lectureRepository: LectureRepository,
     @Inject(LECTURE_APPLICATION_REPOSITORY)
@@ -49,91 +44,46 @@ export class LectureService {
     return this.lectureRepository.findAll();
   }
 
-  async applyPessimisticLock({ userId, lectureId }: ApplyType): Promise<void> {
-    const user = await this.userRepository.findOne(userId);
+  async apply({ userId, lectureId }: ApplyType): Promise<void> {
+    await this.lectureRepository.transactionWithSerializable(async (tx) => {
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+      const user = await this.userRepository.findByIdWithPessimisticLock(
+        userId, tx
+      );
 
-    const existingApplication =
-      await this.lectureApplicationRepository.findByUserId(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
 
-    if (existingApplication) {
-      throw new ConflictException('User already applied');
-    }
-
-    await this.prismaService.$transaction(async (tx) => {
-      const lecture = await this.lectureRepository.findOneForUpdate(
-        lectureId,
-        tx,
+      const lecture = await this.lectureRepository.findByIdWithPessimisticLock(
+        lectureId, tx
       );
 
       if (!lecture) {
-        throw new NotFoundException('Lecture not found');
+        throw new Error('Lecture not found');
       }
 
-      if (lecture.isFull()) {
-        throw new ConflictException('Lecture is full');
+      const isFull = lecture.isFull();
+      
+      if (isFull) {
+        throw new Error('Lecture is full');
       }
 
       lecture.increaseCapacity();
 
       const lectureApplication = LectureApplication.create({
-        userId,
         lectureId,
+        userId,
       });
 
-      await this.lectureApplicationRepository.createWithUpdateLecture(
+      await this.lectureApplicationRepository.createWithPessimisticLock(
         lectureApplication,
+        tx
+      )
+
+      await this.lectureRepository.updateWithPessimisticLock(
         lecture,
-        tx,
-      );
-    });
-  }
-
-  async applyWithOptimisticLock({
-    userId,
-    lectureId,
-  }: ApplyType): Promise<void> {
-    const user = await this.userRepository.findOne(userId);
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    const existingApplication =
-      await this.lectureApplicationRepository.findByUserId(userId);
-
-    if (existingApplication) {
-      throw new ConflictException('User already applied');
-    }
-
-    await this.prismaService.$transaction(async (tx) => {
-      const lecture = await this.lectureRepository.findOneForUpdate(
-        lectureId,
-        tx,
-      );
-
-      if (!lecture) {
-        throw new NotFoundException('Lecture not found');
-      }
-
-      if (lecture.isFull()) {
-        throw new ConflictException('Lecture is full');
-      }
-
-      lecture.increaseCapacity();
-
-      const lectureApplication = LectureApplication.create({
-        userId,
-        lectureId,
-      });
-
-      await this.lectureApplicationRepository.createWithUpdateLectureByOptimisticLock(
-        lectureApplication,
-        lecture,
-        tx,
+        tx
       );
     });
   }

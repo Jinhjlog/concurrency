@@ -71,4 +71,13 @@ export class LectureApplicationRepository {
       ? LectureApplicationMapper.toDomain(lectureApplication)
       : null;
   }
+
+  async createWithPessimisticLock(
+    lectureApplication: LectureApplication,
+    prisma: Prisma.TransactionClient,
+  ): Promise<void> {
+    await prisma.lectureApplication.create({
+      data: LectureApplicationMapper.toPersistence(lectureApplication),
+    });
+  } 
 }

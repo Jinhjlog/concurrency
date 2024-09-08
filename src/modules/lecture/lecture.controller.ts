@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import {
   ApiCreatedResponse,
   ApiOkResponse,
@@ -7,8 +7,8 @@ import {
 } from '@nestjs/swagger';
 import { LectureService } from './lecture.service';
 import { LectureResponseDto } from './dtos/lecture-reponse.dto';
-import { LectureMapper } from './lecture.mapper';
 import { LectureApplicationDto } from './dtos';
+import { LectureAssembler } from './lecture.assembler';
 
 @ApiTags('특강')
 @Controller('lectures')
@@ -27,7 +27,7 @@ export class LectureController {
   async create(
     @Body() { userId, lectureId }: LectureApplicationDto,
   ): Promise<void> {
-    return this.lectureService.applyWithOptimisticLock({ userId, lectureId });
+    throw new Error('not implemented');
   }
 
   @ApiOperation({
@@ -38,11 +38,11 @@ export class LectureController {
     description: '특강 목록 조회 성공',
     type: [LectureResponseDto],
   })
-  @Get('')
+  @Get()
   async findAll(): Promise<LectureResponseDto[]> {
     const lectures = await this.lectureService.findAll();
 
-    return lectures.map(LectureMapper.toResponse);
+    return lectures.map(LectureAssembler.toResponse);
   }
 
   @ApiOperation({

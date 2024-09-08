@@ -1,12 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { LectureResponseDto } from './dtos/lecture-reponse.dto';
 import Lecture from './domain/lecture';
 import {
   LectureModel,
   LectureRawQueryModel,
 } from './database/lecture.repository';
 
-@Injectable()
 export class LectureMapper {
   static toPersistence(lecture: Lecture): LectureModel {
     return {
@@ -30,17 +27,6 @@ export class LectureMapper {
       date: model.date,
       updatedAt: model.updatedAt,
     });
-  }
-
-  static toResponse(lectue: Lecture): LectureResponseDto {
-    return {
-      id: lectue.id,
-      title: lectue.title,
-      description: lectue.description,
-      maxCapacity: lectue.maxCapacity,
-      currentCapacity: lectue.currentCapacity,
-      date: lectue.date,
-    };
   }
 
   static rawQueryToDomain(model: LectureRawQueryModel): Lecture {
