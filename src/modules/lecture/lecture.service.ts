@@ -1,7 +1,4 @@
-import {
-  Inject,
-  Injectable,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   LECTURE_APPLICATION_REPOSITORY,
   LECTURE_REPOSITORY,
@@ -12,11 +9,11 @@ import { UserRepository } from '../user/database/user.repository';
 import Lecture from './domain/lecture';
 import { LectureApplicationRepository } from './database/lecture-application.repository';
 import LectureApplication from './domain/lecture-application';
-
-type ApplyType = {
-  userId: string;
-  lectureId: string;
-};
+import {
+  LectureCapacityExceededException,
+  NotFoundLectureException,
+  NotFoundUserException,
+} from '@common/errors';
 
 @Injectable()
 export class LectureService {
@@ -44,47 +41,34 @@ export class LectureService {
     return this.lectureRepository.findAll();
   }
 
-  async apply({ userId, lectureId }: ApplyType): Promise<void> {
-    await this.lectureRepository.transactionWithSerializable(async (tx) => {
+  async apply(userId: string, lectureId: string): Promise<void> {
+    const user = await this.userRepository.findById(userId);
 
-      const user = await this.userRepository.findByIdWithPessimisticLock(
-        userId, tx
-      );
+    if (!user) {
+      throw new NotFoundUserException();
+    }
 
-      if (!user) {
-        throw new Error('User not found');
-      }
+    const lecture = await this.lectureRepository.findById(lectureId);
 
-      const lecture = await this.lectureRepository.findByIdWithPessimisticLock(
-        lectureId, tx
-      );
+    if (!lecture) {
+      throw new NotFoundLectureException();
+    }
 
-      if (!lecture) {
-        throw new Error('Lecture not found');
-      }
+    const isFull = lecture.isOverCapacity();
 
-      const isFull = lecture.isFull();
-      
-      if (isFull) {
-        throw new Error('Lecture is full');
-      }
+    if (isFull) {
+      throw new LectureCapacityExceededException();
+    }
 
-      lecture.increaseCapacity();
+    lecture.increaseCapacity();
 
-      const lectureApplication = LectureApplication.create({
-        lectureId,
-        userId,
-      });
-
-      await this.lectureApplicationRepository.createWithPessimisticLock(
-        lectureApplication,
-        tx
-      )
-
-      await this.lectureRepository.updateWithPessimisticLock(
-        lecture,
-        tx
-      );
+    const lectureApplication = LectureApplication.create({
+      lectureId,
+      userId,
     });
+
+    await this.lectureApplicationRepository.create(lectureApplication);
+
+    await this.lectureRepository.update(lecture);
   }
 }

@@ -1,10 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { PRISMA_CLIENT } from '../../../core/database/prisma.di-tokens';
-import { PrismaService } from '../../../core/database/prisma.service';
-import Lecture from '../domain/lecture';
 import { LectureMapper } from '../lecture.mapper';
 import { BaseRepository } from 'src/repository/base-respository';
+import { PRISMA_CLIENT } from '@core/database/prisma.di-tokens';
+import { PrismaService } from '@core/database/prisma.service';
+import Lecture from '@lecture/domain/lecture';
 
 export type LectureModel = Prisma.LectureGetPayload<typeof validation>;
 export type LectureRawQueryModel = {
@@ -30,10 +30,8 @@ const validation = Prisma.validator<Prisma.LectureDefaultArgs>()({
 });
 
 @Injectable()
-export class LectureRepository extends BaseRepository{
-  constructor(
-    @Inject(PRISMA_CLIENT) readonly prismaService: PrismaService,
-  ) {
+export class LectureRepository extends BaseRepository {
+  constructor(@Inject(PRISMA_CLIENT) readonly prismaService: PrismaService) {
     super(prismaService);
   }
 
@@ -62,15 +60,28 @@ export class LectureRepository extends BaseRepository{
     return lecture ? LectureMapper.toDomain(lecture) : null;
   }
 
-  async findByIdWithPessimisticLock(id: string, tx: Prisma.TransactionClient): Promise<Lecture | null> {
+  async findByIdWithPessimisticLock(
+    id: string,
+    tx: Prisma.TransactionClient,
+  ): Promise<Lecture | null> {
     const lectures = await tx.$queryRaw<LectureRawQueryModel[]>`
-      SELECT * FROM lecture WHERE lecture_id = ${id} FOR UPDATE;
+      SELECT * FROM lectures WHERE lecture_id = ${id} FOR UPDATE;
     `;
 
     return lectures.length ? LectureMapper.rawQueryToDomain(lectures[0]) : null;
   }
 
-  async updateWithPessimisticLock(lecture: Lecture, tx: Prisma.TransactionClient): Promise<void> {
+  async update(lecture: Lecture): Promise<void> {
+    await this.prismaService.lecture.update({
+      where: { id: lecture.id },
+      data: LectureMapper.toPersistence(lecture),
+    });
+  }
+
+  async updateWithPessimisticLock(
+    lecture: Lecture,
+    tx: Prisma.TransactionClient,
+  ): Promise<void> {
     await tx.lecture.update({
       where: { id: lecture.id },
       data: LectureMapper.toPersistence(lecture),

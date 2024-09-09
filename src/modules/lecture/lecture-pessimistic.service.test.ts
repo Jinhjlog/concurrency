@@ -4,8 +4,8 @@ import { CoreModule } from 'src/core/core.module';
 import { PRISMA_CLIENT } from '@core/database/prisma.di-tokens';
 import { INestApplication } from '@nestjs/common';
 import { PrismaService } from '@core/database/prisma.service';
-import { LectureService } from './lecture.service';
 import { ulid } from 'ulid';
+import { LecturePessimisticService } from './lecture-pessimistic.service';
 
 const mockUsers: {
   id: string;
@@ -14,6 +14,7 @@ const mockUsers: {
   id: ulid(),
   name: `user_${index}`,
 }));
+
 const mockLecture: {
   id: string;
   title: string;
@@ -32,7 +33,7 @@ const mockLecture: {
 
 describe('StockService', () => {
   let app: INestApplication;
-  let lectureService: LectureService;
+  let lectureService: LecturePessimisticService;
   let prismaService: PrismaService;
 
   beforeAll(async () => {
@@ -55,7 +56,9 @@ describe('StockService', () => {
     await app.init();
 
     prismaService = module.get<PrismaService>(PrismaService);
-    lectureService = module.get<LectureService>(LectureService);
+    lectureService = module.get<LecturePessimisticService>(
+      LecturePessimisticService,
+    );
   });
 
   afterAll(async () => {
@@ -79,7 +82,7 @@ describe('StockService', () => {
 
   describe('LectureService', () => {
     describe('apply', () => {
-      it('특강 신청을 동시에 100명이 요청하면 실패한다', async () => {
+      it('특강 신청 요청을 동시에 100개를 요청합니다.', async () => {
         // given
         const applyRequests = Array.from({ length: 100 }, (_, index) =>
           lectureService.apply(mockUsers[index].id, mockLecture.id),
@@ -92,7 +95,8 @@ describe('StockService', () => {
         const lecture = await prismaService.lecture.findUnique({
           where: { id: mockLecture.id },
         });
-        expect(lecture?.currentCapacity).not.toBe(0);
+
+        expect(lecture.currentCapacity).toBe(100);
       });
     });
   });

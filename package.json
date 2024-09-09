@@ -61,7 +61,7 @@
       "ts"
     ],
     "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
+    "testRegex": ".*\\.spec|test\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
@@ -69,7 +69,14 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@core/(.*)$": "<rootDir>/core/$1",
+      "^src/(.*)$": "<rootDir>/$1",
+      "@common/(.*)$": "<rootDir>/common/$1",
+      "@user/(.*)$": "<rootDir>/modules/user/$1",
+      "@lecture/(.*)$": "<rootDir>/modules/lecture/$1"
+    }
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

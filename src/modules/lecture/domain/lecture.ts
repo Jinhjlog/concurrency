@@ -32,7 +32,7 @@ export default class Lecture implements LectureProps {
     });
   }
 
-  isFull(): boolean {
+  isOverCapacity(): boolean {
     return this.currentCapacity >= this.maxCapacity;
   }
 

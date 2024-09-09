@@ -1,8 +1,8 @@
 import Lecture from './lecture';
 
 describe('Lecture', () => {
-  describe('isFull', () => {
-    it('수강 인원이 정원을 초과하면 true를 반환한다', () => {
+  describe('isOverCapacity', () => {
+    it('수강 인원이 정원을 초과하면 true를 반환합니다.', () => {
       // Given
       const lecture = new Lecture({
         id: '1',
@@ -15,13 +15,13 @@ describe('Lecture', () => {
       });
 
       // When & Then
-      expect(lecture.isFull()).toBe(true);
+      expect(lecture.isOverCapacity()).toBe(true);
     });
   });
 
   describe('increaseCapacity', () => {
     // Given
-    it('수강 인원을 1 증가시킨다', () => {
+    it('수강 인원을 1 증가시킵니다.', () => {
       const lecture = new Lecture({
         id: '1',
         title: 'Test Lecture',
