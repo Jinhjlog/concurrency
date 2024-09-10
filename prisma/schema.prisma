@@ -16,7 +16,8 @@ datasource db {
 model User {
   id            String @map("user_id") @id @db.VarChar(26)
   name          String @map("name") @db.VarChar(255)
-  registrations Registration[]
+  applications   LectureApplication[]
+
   
   @@map("users")
 }
@@ -28,18 +29,20 @@ model Lecture {
   maxCapacity     Int      @map("max_capacity") @db.Int
   currentCapacity Int      @map("current_capacity") @db.Int
   date            DateTime @map("date") @db.DateTime
-  registrations   Registration[]
+  updatedAt       DateTime @updatedAt @default(now())
+  applications    LectureApplication[]
   
   @@map("lectures")
 }
 
-model Registration {
-  id           String   @map("registration_id") @id @db.VarChar(26)
-  userId       String   @map("user_id") @db.VarChar(26)
-  lectureId    String   @map("lecture_id") @db.VarChar(26)
-  registerDate DateTime @map("registerDate") @db.DateTime
-  user         User     @relation(fields: [userId], references: [id])
-  lecture      Lecture  @relation(fields: [lectureId], references: [id])
+model LectureApplication {
+  id              String   @map("lecture_application_id") @id @db.VarChar(26)
+  userId          String   @map("user_id") @db.VarChar(26) @unique
+  lectureId       String   @map("lecture_id") @db.VarChar(26)
+  applicationDate DateTime @map("application_date") @db.DateTime
+  user            User     @relation(fields: [userId], references: [id])
+  lecture         Lecture  @relation(fields: [lectureId], references: [id])
 
-  @@map("registrations")
+  @@map("lecture_applications")
 }
+
