@@ -16,7 +16,7 @@ datasource db {
 model User {
   id            String @map("user_id") @id @db.VarChar(26)
   name          String @map("name") @db.VarChar(255)
-  application   LectureApplication[]
+  applications   LectureApplication[]
 
   
   @@map("users")

@@ -3,17 +3,18 @@ import {
   LECTURE_APPLICATION_REPOSITORY,
   LECTURE_REPOSITORY,
 } from './lecture.di-tokens';
-import { LectureRepository } from './database/lecture.repository';
-import { USER_REPOSITORY } from '../user/user.di-tokens';
-import { UserRepository } from '../user/database/user.repository';
 import Lecture from './domain/lecture';
 import { LectureApplicationRepository } from './database/lecture-application.repository';
 import LectureApplication from './domain/lecture-application';
 import {
+  AlreadyAppliedUserException,
   LectureCapacityExceededException,
   NotFoundLectureException,
   NotFoundUserException,
 } from '@common/errors';
+import { LectureRepository } from './database/lecture.repository';
+import { USER_REPOSITORY } from '@user/user.di-tokens';
+import { UserRepository } from '@user/database/user.repository';
 
 @Injectable()
 export class LectureService {
@@ -58,6 +59,13 @@ export class LectureService {
 
     if (isFull) {
       throw new LectureCapacityExceededException();
+    }
+
+    const existingApplication =
+      await this.lectureApplicationRepository.findByUserId(userId);
+
+    if (existingApplication) {
+      throw new AlreadyAppliedUserException();
     }
 
     lecture.increaseCapacity();
