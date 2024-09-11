@@ -41,4 +41,13 @@ export class LectureApplicationRepository {
       data: LectureApplicationMapper.toPersistence(lectureApplication),
     });
   }
+
+  async createWithTransaction(
+    lectureApplication: LectureApplication,
+    prisma: Prisma.TransactionClient,
+  ): Promise<void> {
+    await prisma.lectureApplication.create({
+      data: LectureApplicationMapper.toPersistence(lectureApplication),
+    });
+  }
 }

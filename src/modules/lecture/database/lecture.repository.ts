@@ -4,8 +4,18 @@ import { LectureMapper } from '../lecture.mapper';
 import { PRISMA_CLIENT } from '@core/database/prisma.di-tokens';
 import { PrismaService } from '@core/database/prisma.service';
 import Lecture from '@lecture/domain/lecture';
+import { BaseRepository } from 'src/repository/base-respository';
 
 export type LectureModel = Prisma.LectureGetPayload<typeof validation>;
+export type LectureRawQueryModel = {
+  lecture_id: string;
+  title: string;
+  name: string;
+  max_capacity: number;
+  current_capacity: number;
+  date: Date;
+  updated_at: Date;
+};
 
 const validation = Prisma.validator<Prisma.LectureDefaultArgs>()({
   select: {
@@ -20,8 +30,10 @@ const validation = Prisma.validator<Prisma.LectureDefaultArgs>()({
 });
 
 @Injectable()
-export class LectureRepository {
-  constructor(@Inject(PRISMA_CLIENT) readonly prismaService: PrismaService) {}
+export class LectureRepository extends BaseRepository {
+  constructor(@Inject(PRISMA_CLIENT) readonly prismaService: PrismaService) {
+    super(prismaService);
+  }
 
   async create(data: Lecture): Promise<Lecture> {
     const lecture = await this.prismaService.lecture.create({
@@ -48,11 +60,31 @@ export class LectureRepository {
     return lecture ? LectureMapper.toDomain(lecture) : null;
   }
 
+  async findByIdWithPessimisticLock(
+    id: string,
+    tx: Prisma.TransactionClient,
+  ): Promise<Lecture | null> {
+    const lectures = await tx.$queryRaw<LectureRawQueryModel[]>`
+      SELECT * FROM lectures WHERE lecture_id = ${id} FOR UPDATE;
+    `;
+
+    return lectures.length ? LectureMapper.rawQueryToDomain(lectures[0]) : null;
+  }
+
   async update(lecture: Lecture): Promise<void> {
     await this.prismaService.lecture.update({
       where: { id: lecture.id },
       data: LectureMapper.toPersistence(lecture),
     });
   }
-  s;
+
+  async updateWithTransaction(
+    lecture: Lecture,
+    tx: Prisma.TransactionClient,
+  ): Promise<void> {
+    await tx.lecture.update({
+      where: { id: lecture.id },
+      data: LectureMapper.toPersistence(lecture),
+    });
+  }
 }

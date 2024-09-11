@@ -34,4 +34,14 @@ export class UserRepository {
 
     return user ? UserMapper.toDomain(user) : null;
   }
+
+  async findByIdWithPessimisticLock(
+    id: string,
+    tx: Prisma.TransactionClient,
+  ): Promise<User | null> {
+    const user = await tx.$queryRaw<UserModel[]>`
+      SELECT u.user_id as id, u.name FROM users u WHERE user_id = ${id} FOR UPDATE`;
+
+    return user.length ? UserMapper.toDomain(user[0]) : null;
+  }
 }
