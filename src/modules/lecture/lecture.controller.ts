@@ -7,10 +7,14 @@ import {
 } from '@nestjs/swagger';
 import { LectureResponseDto } from './dtos/lecture-reponse.dto';
 import { LectureApplicationDto } from './dtos';
+import { LectureService } from './lecture.service';
+import { LectureTransformer } from './lecture.transformer';
 
 @ApiTags('특강')
 @Controller('lectures')
 export class LectureController {
+  constructor(private readonly lectureService: LectureService) {}
+
   @ApiOperation({
     summary: '특강 신청',
     description:
@@ -23,7 +27,7 @@ export class LectureController {
   async create(
     @Body() { userId, lectureId }: LectureApplicationDto,
   ): Promise<void> {
-    throw new Error('Not implemented');
+    this.lectureService.apply(userId, lectureId);
   }
 
   @ApiOperation({
@@ -36,7 +40,9 @@ export class LectureController {
   })
   @Get()
   async findAll(): Promise<LectureResponseDto[]> {
-    throw new Error('Not implemented');
+    const lectures = await this.lectureService.findAll();
+
+    return lectures.map(LectureTransformer.toResponse);
   }
 
   @ApiOperation({
@@ -49,6 +55,6 @@ export class LectureController {
   })
   @Get('/application/:userId')
   findOne(@Param('userId') userId: string): Promise<boolean> {
-    throw new Error('Not implemented');
+    return this.lectureService.isApplicationCompleted(userId);
   }
 }
