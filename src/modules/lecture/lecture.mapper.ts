@@ -1,5 +1,8 @@
 import Lecture from './domain/lecture';
-import { LectureModel } from './database/lecture.repository';
+import {
+  LectureModel,
+  LectureRawQueryModel,
+} from './database/lecture.repository';
 
 export class LectureMapper {
   static toPersistence(lecture: Lecture): LectureModel {
@@ -23,6 +26,18 @@ export class LectureMapper {
       currentCapacity: model.currentCapacity,
       date: model.date,
       updatedAt: model.updatedAt,
+    });
+  }
+
+  static rawQueryToDomain(model: LectureRawQueryModel): Lecture {
+    return new Lecture({
+      id: model.lecture_id,
+      title: model.title,
+      description: model.name,
+      maxCapacity: model.max_capacity,
+      currentCapacity: model.current_capacity,
+      date: model.date,
+      updatedAt: model.updated_at,
     });
   }
 }
