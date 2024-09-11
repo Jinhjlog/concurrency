@@ -8,11 +8,14 @@ import { LectureRepository } from './database/lecture.repository';
 import { LectureApplicationRepository } from './database/lecture-application.repository';
 import { LectureService } from './lecture.service';
 import { UserModule } from '@user/user.module';
+import { LecturePessimisticService } from './lecture-pessimistic.service';
+
 @Module({
   imports: [UserModule],
   controllers: [LectureController],
   providers: [
     LectureService,
+    LecturePessimisticService,
     { provide: LECTURE_REPOSITORY, useClass: LectureRepository },
     {
       provide: LECTURE_APPLICATION_REPOSITORY,
